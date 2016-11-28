@@ -1,30 +1,16 @@
+using CoreGraphics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Xamarin.Forms.Internals;
-
-#if __UNIFIED__
 using UIKit;
-using CoreGraphics;
-#else
-using MonoTouch.UIKit;
-using MonoTouch.CoreGraphics;
-#endif
-#if __UNIFIED__
-using RectangleF = CoreGraphics.CGRect;
-using SizeF = CoreGraphics.CGSize;
+using Xamarin.Forms.Internals;
+using Xamarin.Forms.PlatformConfiguration.iOSSpecific;
+using static Xamarin.Forms.PlatformConfiguration.iOSSpecific.Page;
+using PageUIStatusBarAnimation = Xamarin.Forms.PlatformConfiguration.iOSSpecific.UIStatusBarAnimation;
 using PointF = CoreGraphics.CGPoint;
-
-#else
-using nfloat=System.Single;
-using nint=System.Int32;
-using nuint=System.UInt32;
-#endif
+using RectangleF = CoreGraphics.CGRect;
 
 namespace Xamarin.Forms.Platform.iOS
 {
@@ -49,6 +35,8 @@ namespace Xamarin.Forms.Platform.iOS
 				var parentingViewController = (ParentingViewController)ViewControllers.Last();
 				UpdateLeftBarButtonItem(parentingViewController);
 			});
+
+			
 		}
 
 		Page Current { get; set; }
@@ -122,18 +110,10 @@ namespace Xamarin.Forms.Platform.iOS
 			return OnPopViewAsync(page, animated);
 		}
 
-#if __UNIFIED__
 		public override UIViewController PopViewController(bool animated)
-#else
-		public override UIViewController PopViewControllerAnimated (bool animated)
-		#endif
 		{
 			RemoveViewControllers(animated);
-#if __UNIFIED__
 			return base.PopViewController(animated);
-#else
-			return base.PopViewControllerAnimated (animated);
-			#endif
 		}
 
 		public Task<bool> PushPageAsync(Page page, bool animated = true)
@@ -203,7 +183,10 @@ namespace Xamarin.Forms.Platform.iOS
 			base.ViewDidLoad();
 
 			if (Forms.IsiOS7OrNewer)
-				NavigationBar.Translucent = false;
+			{
+				
+				UpdateTranslucent();
+			}
 			else
 				WantsFullScreenLayout = false;
 
@@ -326,11 +309,7 @@ namespace Xamarin.Forms.Platform.iOS
 			var task = GetAppearedOrDisappearedTask(page);
 
 			UIViewController poppedViewController;
-#if __UNIFIED__
 			poppedViewController = base.PopViewController(animated);
-#else
-			poppedViewController = base.PopViewControllerAnimated (animated);
-			#endif
 
 			if (poppedViewController == null)
 			{
@@ -453,12 +432,34 @@ namespace Xamarin.Forms.Platform.iOS
 				UpdateTint();
 			if (e.PropertyName == NavigationPage.BarBackgroundColorProperty.PropertyName)
 				UpdateBarBackgroundColor();
-			else if (e.PropertyName == NavigationPage.BarTextColorProperty.PropertyName)
+			else if (e.PropertyName == NavigationPage.BarTextColorProperty.PropertyName || e.PropertyName == PlatformConfiguration.iOSSpecific.NavigationPage.StatusBarTextColorModeProperty.PropertyName)
 				UpdateBarTextColor();
 			else if (e.PropertyName == VisualElement.BackgroundColorProperty.PropertyName)
 				UpdateBackgroundColor();
 			else if (e.PropertyName == NavigationPage.CurrentPageProperty.PropertyName)
 				Current = ((NavigationPage)Element).CurrentPage;
+			else if (e.PropertyName == PlatformConfiguration.iOSSpecific.NavigationPage.IsNavigationBarTranslucentProperty.PropertyName)
+				UpdateTranslucent();
+			else if (e.PropertyName == PreferredStatusBarUpdateAnimationProperty.PropertyName)
+				UpdateCurrentPagePreferredStatusBarUpdateAnimation();
+		}
+
+		void UpdateCurrentPagePreferredStatusBarUpdateAnimation()
+		{
+			// Not using the extension method syntax here because for some reason it confuses the mono compiler
+			// and throws a CS0121 error
+			PageUIStatusBarAnimation animation = PlatformConfiguration.iOSSpecific.Page.PreferredStatusBarUpdateAnimation(((Page)Element).OnThisPlatform());
+			PlatformConfiguration.iOSSpecific.Page.SetPreferredStatusBarUpdateAnimation(Current.OnThisPlatform(), animation);
+		}
+
+		void UpdateTranslucent()
+		{
+			if (!Forms.IsiOS7OrNewer)
+			{
+				return;
+			}
+
+			NavigationBar.Translucent = ((NavigationPage)Element).OnThisPlatform().IsNavigationBarTranslucent();
 		}
 
 		void InsertPageBefore(Page page, Page before)
@@ -503,7 +504,7 @@ namespace Xamarin.Forms.Platform.iOS
 			if (page == null)
 				throw new ArgumentNullException("page");
 			if (page == Current)
-				throw new NotSupportedException(); // should never happen as NavPage protecs against this
+				throw new NotSupportedException(); // should never happen as NavPage protects against this
 
 			var target = Platform.GetRenderer(page).ViewController.ParentViewController;
 
@@ -612,23 +613,25 @@ namespace Xamarin.Forms.Platform.iOS
 				NavigationBar.TitleTextAttributes = titleAttributes;
 			}
 
+			var statusBarColorMode = (Element as NavigationPage).OnThisPlatform().GetStatusBarTextColorMode();
+
 			// set Tint color (i. e. Back Button arrow and Text)
 			if (Forms.IsiOS7OrNewer)
 			{
-				NavigationBar.TintColor = barTextColor == Color.Default
+				NavigationBar.TintColor = barTextColor == Color.Default || statusBarColorMode == StatusBarTextColorMode.DoNotAdjust
 					? UINavigationBar.Appearance.TintColor
 					: barTextColor.ToUIColor();
 			}
 
-			if (barTextColor.Luminosity > 0.5)
-			{
-				// Use light text color for status bar
-				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
-			}
-			else
+			if (statusBarColorMode == StatusBarTextColorMode.DoNotAdjust || barTextColor.Luminosity <= 0.5)
 			{
 				// Use dark text color for status bar
 				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.Default;
+			}
+			else
+			{
+				// Use light text color for status bar
+				UIApplication.SharedApplication.StatusBarStyle = UIStatusBarStyle.LightContent;
 			}
 		}
 
@@ -850,6 +853,7 @@ namespace Xamarin.Forms.Platform.iOS
 			public override void ViewWillAppear(bool animated)
 			{
 				UpdateNavigationBarVisibility(animated);
+				EdgesForExtendedLayout = UIRectEdge.None;
 				base.ViewWillAppear(animated);
 			}
 
@@ -858,7 +862,13 @@ namespace Xamarin.Forms.Platform.iOS
 				if (disposing)
 				{
 					((IPageController)Child).SendDisappearing();
-					Child = null;
+
+					if (Child != null)
+					{
+						Child.PropertyChanged -= HandleChildPropertyChanged;
+						Child = null;
+					}
+
 					_tracker.Target = null;
 					_tracker.CollectionChanged -= TrackerOnCollectionChanged;
 					_tracker = null;
@@ -886,6 +896,14 @@ namespace Xamarin.Forms.Platform.iOS
 					NavigationItem.Title = Child.Title;
 				else if (e.PropertyName == NavigationPage.HasBackButtonProperty.PropertyName)
 					UpdateHasBackButton();
+				else if (e.PropertyName == PrefersStatusBarHiddenProperty.PropertyName)
+					UpdatePrefersStatusBarHidden();
+			}
+
+			void UpdatePrefersStatusBarHidden()
+			{
+				View.SetNeedsLayout();
+				ParentViewController?.View.SetNeedsLayout();
 			}
 
 			void TrackerOnCollectionChanged(object sender, EventArgs eventArgs)
@@ -946,8 +964,47 @@ namespace Xamarin.Forms.Platform.iOS
 				if (_navigation.TryGetTarget(out n))
 					n.UpdateToolBarVisible();
 			}
+
+			public override UIInterfaceOrientationMask GetSupportedInterfaceOrientations()
+			{
+				IVisualElementRenderer childRenderer;
+				if (Child != null && (childRenderer = Platform.GetRenderer(Child)) != null)
+					return childRenderer.ViewController.GetSupportedInterfaceOrientations();
+				return base.GetSupportedInterfaceOrientations();
+			}
+
+			public override UIInterfaceOrientation PreferredInterfaceOrientationForPresentation()
+			{
+				IVisualElementRenderer childRenderer;
+				if (Child != null && (childRenderer = Platform.GetRenderer(Child)) != null)
+					return childRenderer.ViewController.PreferredInterfaceOrientationForPresentation();
+				return base.PreferredInterfaceOrientationForPresentation();
+			}
+
+			public override bool ShouldAutorotate()
+			{
+				IVisualElementRenderer childRenderer;
+				if (Child != null && (childRenderer = Platform.GetRenderer(Child)) != null)
+					return childRenderer.ViewController.ShouldAutorotate();				
+				return base.ShouldAutorotate();
+			}
+
+			public override bool ShouldAutorotateToInterfaceOrientation(UIInterfaceOrientation toInterfaceOrientation)
+			{
+				IVisualElementRenderer childRenderer;
+				if (Child != null && (childRenderer = Platform.GetRenderer(Child)) != null)
+					return childRenderer.ViewController.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+				return base.ShouldAutorotateToInterfaceOrientation(toInterfaceOrientation);
+			}
+
+			public override bool ShouldAutomaticallyForwardRotationMethods => true;
 		}
 
+		public override UIViewController ChildViewControllerForStatusBarHidden()
+		{
+			return (UIViewController)Platform.GetRenderer(Current);
+		}
+		
 		void IEffectControlProvider.RegisterEffect(Effect effect)
 		{
 			var platformEffect = effect as PlatformEffect;

@@ -20,6 +20,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		readonly TapGestureHandler _tapGestureHandler;
 
 		float _defaultElevation = -1f;
+		float _defaultCornerRadius = -1f;
 
 		bool _clickable;
 		bool _disposed;
@@ -138,9 +139,20 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 					_visualElementPackager.Dispose();
 					_visualElementPackager = null;
 				}
+			
+				int count = ChildCount;
+				for (var i = 0; i < count; i++)
+				{
+					AView child = GetChildAt(i);
+					child.Dispose();
+				}
 
 				if (Element != null)
+				{
 					Element.PropertyChanged -= OnElementPropertyChanged;
+					UnsubscribeGestureRecognizers(Element);
+				}
+				
 			}
 
 			base.Dispose(disposing);
@@ -173,6 +185,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				e.NewElement.PropertyChanged += OnElementPropertyChanged;
 				UpdateShadow();
 				UpdateBackgroundColor();
+				UpdateCornerRadius();
 				SubscribeGestureRecognizers(e.NewElement);
 			}
 		}
@@ -204,6 +217,8 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				UpdateShadow();
 			else if (e.PropertyName == VisualElement.BackgroundColorProperty.PropertyName)
 				UpdateBackgroundColor();
+			else if (e.PropertyName == Frame.CornerRadiusProperty.PropertyName)
+				UpdateCornerRadius();
 		}
 
 		void SubscribeGestureRecognizers(VisualElement element)
@@ -216,7 +231,10 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				_collectionChangeHandler = HandleGestureRecognizerCollectionChanged;
 
 			var observableCollection = (ObservableCollection<IGestureRecognizer>)view.GestureRecognizers;
-			observableCollection.CollectionChanged += _collectionChangeHandler;
+			if (observableCollection != null)
+			{
+				observableCollection.CollectionChanged += _collectionChangeHandler;
+			}
 		}
 
 		void UnsubscribeGestureRecognizers(VisualElement element)
@@ -226,7 +244,10 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				return;
 
 			var observableCollection = (ObservableCollection<IGestureRecognizer>)view.GestureRecognizers;
-			observableCollection.CollectionChanged -= _collectionChangeHandler;
+			if (observableCollection != null)
+			{
+				observableCollection.CollectionChanged -= _collectionChangeHandler;
+			}
 		}
 
 		void UpdateBackgroundColor()
@@ -268,6 +289,23 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				CardElevation = elevation;
 			else
 				CardElevation = 0f;
+		}
+
+		void UpdateCornerRadius()
+		{
+			if (_defaultCornerRadius == -1f)
+			{
+				_defaultCornerRadius = Radius;
+			}
+
+			float cornerRadius = Element.CornerRadius;
+
+			if (cornerRadius == -1f)
+				cornerRadius = _defaultCornerRadius;
+			else
+				cornerRadius = Context.ToPixels(cornerRadius);
+
+			Radius = cornerRadius;
 		}
 	}
 }

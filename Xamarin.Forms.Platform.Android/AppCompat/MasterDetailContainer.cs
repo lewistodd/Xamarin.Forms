@@ -1,5 +1,6 @@
 using Android.App;
 using Android.Content;
+using Android.OS;
 using Fragment = Android.Support.V4.App.Fragment;
 using FragmentManager = Android.Support.V4.App.FragmentManager;
 using FragmentTransaction = Android.Support.V4.App.FragmentTransaction;
@@ -11,7 +12,9 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		PageContainer _pageContainer;
 		FragmentManager _fragmentManager;
 		readonly bool _isMaster;
-		readonly MasterDetailPage _parent;
+		MasterDetailPage _parent;
+		Fragment _currentFragment;
+		bool _disposed;
 
 		public MasterDetailContainer(MasterDetailPage parent, bool isMaster, Context context) : base(parent, isMaster, context)
 		{
@@ -59,17 +62,33 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 			if (page == null)
 			{
-				// Not a NavigationPage or TabbedPage? Just do the normal thing
+				// The thing we're adding is not a NavigationPage or TabbedPage, so we can just use the old AddChildView 
+
+				if (_currentFragment != null)
+				{
+					// But first, if the previous occupant of this container was a fragment, we need to remove it properly
+					FragmentTransaction transaction = FragmentManager.BeginTransaction();
+					transaction.DisallowAddToBackStack();
+					transaction.Remove(_currentFragment);
+					transaction.SetTransition((int)FragmentTransit.None);
+
+					// This is a removal of a fragment that's not going on the back stack; there's no reason to care
+					// whether its state gets successfully saved, since we'll never restore it. Ergo, CommitAllowingStateLoss
+					transaction.CommitAllowingStateLoss();
+
+					_currentFragment = null;
+				}
+				
 				base.AddChildView(childView);
 			}
 			else
 			{
 				// The renderers for NavigationPage and TabbedPage both host fragments, so they need to be wrapped in a 
 				// FragmentContainer in order to get isolated fragment management
-
 				Fragment fragment = FragmentContainer.CreateInstance(page);
-				
+
 				var fc = fragment as FragmentContainer;
+
 				fc?.SetOnCreateCallback(pc =>
 				{
 					_pageContainer = pc;
@@ -78,10 +97,54 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 				FragmentTransaction transaction = FragmentManager.BeginTransaction();
 				transaction.DisallowAddToBackStack();
+
+				if (_currentFragment != null)
+				{
+					transaction.Remove(_currentFragment);
+				}
+
 				transaction.Add(Id, fragment);
-				transaction.SetTransition((int)FragmentTransit.FragmentOpen);
-				transaction.Commit();
+				transaction.SetTransition((int)FragmentTransit.None);
+
+				// We don't currently support fragment restoration 
+				// So we don't need to worry about loss of this fragment's state
+				transaction.CommitAllowingStateLoss();
+
+				_currentFragment = fragment;
+
+				new Handler(Looper.MainLooper).PostAtFrontOfQueue(() => FragmentManager.ExecutePendingTransactions());
 			}
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			_disposed = true;
+
+			if (disposing)
+			{
+				if (_currentFragment != null)
+				{
+					FragmentTransaction transaction = FragmentManager.BeginTransaction();
+					transaction.DisallowAddToBackStack();
+					transaction.Remove(_currentFragment);
+					transaction.SetTransition((int)FragmentTransit.None);
+					transaction.CommitAllowingStateLoss();
+					FragmentManager.ExecutePendingTransactions();
+
+					_currentFragment = null;
+				}
+
+				_parent = null;
+				_pageContainer = null;
+				_fragmentManager = null;
+			}
+
+			base.Dispose(disposing);
 		}
 
 		public void SetFragmentManager(FragmentManager fragmentManager)

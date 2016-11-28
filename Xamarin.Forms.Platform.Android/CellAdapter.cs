@@ -8,6 +8,7 @@ using Android.Views;
 using Android.Widget;
 using AView = Android.Views.View;
 using AListView = Android.Widget.ListView;
+using Android.Graphics.Drawables;
 
 namespace Xamarin.Forms.Platform.Android
 {
@@ -81,15 +82,15 @@ namespace Xamarin.Forms.Platform.Android
 		public bool OnActionItemClicked(ActionMode mode, IMenuItem item)
 		{
 			OnActionItemClickedImpl(item);
-			if (mode != null && mode.Handle != IntPtr.Zero)
-				mode.Finish();
+			_actionMode?.Finish();
 			return true;
 		}
 
 		bool global::Android.Support.V7.View.ActionMode.ICallback.OnActionItemClicked(global::Android.Support.V7.View.ActionMode mode, IMenuItem item)
 		{
 			OnActionItemClickedImpl(item);
-			mode.Finish();
+
+			_supportActionMode?.Finish();
 			return true;
 		}
 
@@ -194,7 +195,11 @@ namespace Xamarin.Forms.Platform.Android
 				IMenuItem item = menu.Add(Menu.None, i, Menu.None, action.Text);
 
 				if (action.Icon != null)
-					item.SetIcon(_context.Resources.GetDrawable(action.Icon));
+				{
+					var iconBitmap = new BitmapDrawable(_context.Resources, ResourceManager.GetBitmap(_context.Resources, action.Icon));
+					if (iconBitmap != null && iconBitmap.Bitmap != null)
+						item.SetIcon(_context.Resources.GetDrawable(action.Icon));
+				}
 
 				action.PropertyChanged += changed;
 				action.PropertyChanging += changing;
@@ -209,7 +214,13 @@ namespace Xamarin.Forms.Platform.Android
 
 		bool HandleContextMode(AView view, int position)
 		{
+			if (view is EditText || view is TextView || view is SearchView)
+				return false;
+
 			Cell cell = GetCellForPosition(position);
+
+			if (cell == null)
+				return false;
 
 			if (_actionMode != null || _supportActionMode != null)
 			{

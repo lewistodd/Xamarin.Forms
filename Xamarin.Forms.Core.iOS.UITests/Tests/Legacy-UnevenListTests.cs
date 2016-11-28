@@ -10,7 +10,6 @@ namespace Xamarin.Forms.Core.UITests
 	{
 		public UnevenListTests ()
 		{
-			ShouldResetPerFixture = false;
 		}
 
 		protected override void NavigateToGallery ()
@@ -21,10 +20,11 @@ namespace Xamarin.Forms.Core.UITests
 		[Test]
 		public void UnevenListCellTest ()
 		{
-			if (UnevenListTests.ShouldRunTest(RunningApp.App)) {
-				var element = App.Query (q => q.Marked ("unevenCellListGalleryDynamic").Descendant (("UITableViewCellContentView"))) [0];
-	
-				Assert.GreaterOrEqual (element.Rect.Height, 100);
+			if (UnevenListTests.ShouldRunTest(App))
+			{
+				var element = App.Query(q => q.Marked("unevenCellListGalleryDynamic").Descendant(("UITableViewCellContentView")))[0];
+
+				Assert.GreaterOrEqual(element.Rect.Height, 100);
 			}
 		}
 

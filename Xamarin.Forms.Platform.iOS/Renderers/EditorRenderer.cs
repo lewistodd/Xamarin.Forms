@@ -1,21 +1,7 @@
 using System;
-using System.Drawing;
 using System.ComponentModel;
-#if __UNIFIED__
 using UIKit;
-#else
-using MonoTouch.UIKit;
-#endif
-#if __UNIFIED__
 using RectangleF = CoreGraphics.CGRect;
-using SizeF = CoreGraphics.CGSize;
-using PointF = CoreGraphics.CGPoint;
-
-#else
-using nfloat=System.Single;
-using nint=System.Int32;
-using nuint=System.UInt32;
-#endif
 
 namespace Xamarin.Forms.Platform.iOS
 {
@@ -113,6 +99,9 @@ namespace Xamarin.Forms.Platform.iOS
 
 		void OnEnded(object sender, EventArgs eventArgs)
 		{
+			if (Control.Text != Element.Text)
+				ElementController.SetValueFromRenderer(Editor.TextProperty, Control.Text);
+
 			Element.SetValue(VisualElement.IsFocusedPropertyKey, false);
 			Element.SendCompleted();
 		}

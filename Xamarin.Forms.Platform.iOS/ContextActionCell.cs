@@ -1,25 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Collections.Generic;
-using System.Drawing;
-using Xamarin.Forms.Platform.iOS.Resources;
-#if __UNIFIED__
-using UIKit;
 using Foundation;
-#else
-using MonoTouch.UIKit;
-using MonoTouch.Foundation;
-#endif
-#if __UNIFIED__
+using UIKit;
+using Xamarin.Forms.Platform.iOS.Resources;
+using PointF = CoreGraphics.CGPoint;
 using RectangleF = CoreGraphics.CGRect;
 using SizeF = CoreGraphics.CGSize;
-using PointF = CoreGraphics.CGPoint;
-
-#else
-using nfloat=System.Single;
-using nint=System.Int32;
-#endif
 
 namespace Xamarin.Forms.Platform.iOS
 {
@@ -99,13 +87,10 @@ namespace Xamarin.Forms.Platform.iOS
 		{
 			base.LayoutSubviews();
 
-			if (_scroller == null || (_scroller != null && _scroller.Frame == Bounds))
+			if (_scroller == null || (_scroller != null && _scroller.Frame.Width == ContentView.Bounds.Width))
 				return;
 
 			Update(_tableView, _cell, ContentCell);
-
-			_scroller.Frame = Bounds;
-			ContentCell.Frame = Bounds;
 
 			if (ContentCell is ViewCellRenderer.ViewTableCell && ContentCell.Subviews.Length > 0 && Math.Abs(ContentCell.Subviews[0].Frame.Height - Bounds.Height) > 1)
 			{
@@ -142,7 +127,7 @@ namespace Xamarin.Forms.Platform.iOS
 			}
 
 			var height = Frame.Height;
-			var width = tableView.Frame.Width;
+			var width = ContentView.Frame.Width;
 
 			nativeCell.Frame = new RectangleF(0, 0, width, height);
 			nativeCell.SetNeedsLayout();
@@ -673,8 +658,10 @@ namespace Xamarin.Forms.Platform.iOS
 			{
 				var selector = (SelectGestureRecognizer)recognizer;
 
-				var table = (UITableView)recognizer.View;
+				if (selector._lastPath == null)
+					return;
 
+				var table = (UITableView)recognizer.View;
 				if (!selector._lastPath.Equals(table.IndexPathForSelectedRow))
 					table.SelectRow(selector._lastPath, false, UITableViewScrollPosition.None);
 				table.Source.RowSelected(table, selector._lastPath);

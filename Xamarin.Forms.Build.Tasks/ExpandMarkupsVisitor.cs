@@ -12,9 +12,9 @@ namespace Xamarin.Forms.Build.Tasks
 		{
 			XmlName.xKey,
 			XmlName.xTypeArguments,
-			XmlName.xArguments,
 			XmlName.xFactoryMethod,
-			XmlName.xName
+			XmlName.xName,
+			XmlName.xDataType
 		};
 
 		public ExpandMarkupsVisitor(ILContext context)
@@ -49,6 +49,8 @@ namespace Xamarin.Forms.Build.Tasks
 			if (!TryGetProperyName(markupnode, parentNode, out propertyName))
 				return;
 			if (skips.Contains(propertyName))
+				return;
+			if (parentNode is IElementNode && ((IElementNode)parentNode).SkipProperties.Contains (propertyName))
 				return;
 			var markupString = markupnode.MarkupString;
 			var node = ParseExpression(ref markupString, Context, markupnode.NamespaceResolver, markupnode) as IElementNode;
@@ -164,7 +166,7 @@ namespace Xamarin.Forms.Build.Tasks
 				try
 				{
 					type = new XmlType(namespaceuri, name + "Extension", null);
-					type.GetTypeReference(contextProvider.Context.Body.Method.Module, null);
+					type.GetTypeReference(contextProvider.Context.Module, null);
 				}
 				catch (XamlParseException)
 				{
@@ -175,8 +177,8 @@ namespace Xamarin.Forms.Build.Tasks
 					throw new NotSupportedException();
 
 				node = xmlLineInfo == null
-					? new ElementNode(type, null, nsResolver)
-					: new ElementNode(type, null, nsResolver, xmlLineInfo.LineNumber, xmlLineInfo.LinePosition);
+					? new ElementNode(type, "", nsResolver)
+					: new ElementNode(type, "", nsResolver, xmlLineInfo.LineNumber, xmlLineInfo.LinePosition);
 
 				if (remaining.StartsWith("}", StringComparison.Ordinal))
 				{

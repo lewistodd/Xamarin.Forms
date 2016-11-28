@@ -6,6 +6,7 @@ using Android.Content.Res;
 using Android.Text;
 using Android.Widget;
 using Object = Java.Lang.Object;
+using System.Collections.Specialized;
 
 namespace Xamarin.Forms.Platform.Android.AppCompat
 {
@@ -31,7 +32,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 			{
 				_disposed = true;
 
-				((ObservableList<string>)Element.Items).CollectionChanged -= RowsCollectionChanged;
+				((INotifyCollectionChanged)Element.Items).CollectionChanged -= RowsCollectionChanged;
 			}
 
 			base.Dispose(disposing);
@@ -40,11 +41,11 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		protected override void OnElementChanged(ElementChangedEventArgs<Picker> e)
 		{
 			if (e.OldElement != null)
-				((ObservableList<string>)e.OldElement.Items).CollectionChanged -= RowsCollectionChanged;
+				((INotifyCollectionChanged)e.OldElement.Items).CollectionChanged -= RowsCollectionChanged;
 
 			if (e.NewElement != null)
 			{
-				((ObservableList<string>)e.NewElement.Items).CollectionChanged += RowsCollectionChanged;
+				((INotifyCollectionChanged)e.NewElement.Items).CollectionChanged += RowsCollectionChanged;
 				if (Control == null)
 				{
 					EditText textField = CreateNativeControl();
@@ -93,25 +94,30 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		void OnClick()
 		{
 			Picker model = Element;
-			using (var builder = new AlertDialog.Builder(Context))
+			if (_dialog == null)
 			{
-				builder.SetTitle(model.Title ?? "");
-				string[] items = model.Items.ToArray();
-				builder.SetItems(items, (s, e) => ((IElementController)model).SetValueFromRenderer(Picker.SelectedIndexProperty, e.Which));
+				using (var builder = new AlertDialog.Builder(Context))
+				{
+					builder.SetTitle(model.Title ?? "");
+					string[] items = model.Items.ToArray();
+					builder.SetItems(items, (s, e) => ((IElementController)model).SetValueFromRenderer(Picker.SelectedIndexProperty, e.Which));
 
-				builder.SetNegativeButton(global::Android.Resource.String.Cancel, (o, args) => { });
+					builder.SetNegativeButton(global::Android.Resource.String.Cancel, (o, args) => { });
+					
+					((IElementController)Element).SetValueFromRenderer(VisualElement.IsFocusedPropertyKey, true);
 
-				_dialog = builder.Create();
+					_dialog = builder.Create();
+				}
+				_dialog.SetCanceledOnTouchOutside(true);
+				_dialog.DismissEvent += (sender, args) =>
+				{
+					((IElementController)Element).SetValueFromRenderer(VisualElement.IsFocusedPropertyKey, false);
+					_dialog.Dispose();
+					_dialog = null;
+				};
+
+				_dialog.Show();
 			}
-
-			_dialog.SetCanceledOnTouchOutside(true);
-			_dialog.DismissEvent += (sender, args) =>
-			{
-				_dialog.Dispose();
-				_dialog = null;
-			};
-
-			_dialog.Show();
 		}
 
 		void RowsCollectionChanged(object sender, EventArgs e)
