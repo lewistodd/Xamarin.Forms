@@ -478,6 +478,7 @@
       <Type Name="ReflectionExtensions" Kind="Class" />
       <Type Name="Registrar" Kind="Class" />
       <Type Name="Registrar`1" DisplayName="Registrar&lt;TRegistrable&gt;" Kind="Class" />
+      <Type Name="ResourceLoader" Kind="Class" />
       <Type Name="ResourcesChangedEventArgs" Kind="Class" />
       <Type Name="SetValueFlags" Kind="Enumeration" />
       <Type Name="TableModel" Kind="Class" />
@@ -509,6 +510,7 @@
       <Type Name="NavigationPage" Kind="Class" />
       <Type Name="Page" Kind="Class" />
       <Type Name="Picker" Kind="Class" />
+      <Type Name="ScrollView" Kind="Class" />
       <Type Name="StatusBarHiddenMode" Kind="Enumeration" />
       <Type Name="StatusBarTextColorMode" Kind="Enumeration" />
       <Type Name="UIStatusBarAnimation" Kind="Enumeration" />
@@ -1059,7 +1061,7 @@
           <param name="self">To be added.</param>
           <param name="item">To be added.</param>
           <param name="container">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.DataTemplateExtensions" Member="M:Xamarin.Forms.Internals.DataTemplateExtensions.CreateContent(Xamarin.Forms.DataTemplate,System.Object,Xamarin.Forms.BindableObject)" />
       </Member>
@@ -1080,7 +1082,7 @@
         </Parameters>
         <Docs>
           <param name="orientation">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.DeviceOrientationExtensions" Member="M:Xamarin.Forms.Internals.DeviceOrientationExtensions.IsLandscape(Xamarin.Forms.Internals.DeviceOrientation)" />
       </Member>
@@ -1101,7 +1103,7 @@
         </Parameters>
         <Docs>
           <param name="orientation">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.DeviceOrientationExtensions" Member="M:Xamarin.Forms.Internals.DeviceOrientationExtensions.IsPortrait(Xamarin.Forms.Internals.DeviceOrientation)" />
       </Member>
@@ -1128,7 +1130,7 @@
           <typeparam name="T">To be added.</typeparam>
           <param name="enumeration">To be added.</param>
           <param name="action">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.EnumerableExtensions" Member="M:Xamarin.Forms.Internals.EnumerableExtensions.ForEach``1(System.Collections.Generic.IEnumerable{``0},System.Action{``0})" />
       </Member>
@@ -1159,7 +1161,7 @@
           <typeparam name="T">To be added.</typeparam>
           <param name="gestures">To be added.</param>
           <param name="predicate">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.EnumerableExtensions" Member="M:Xamarin.Forms.Internals.EnumerableExtensions.GetGesturesFor``1(System.Collections.Generic.IEnumerable{Xamarin.Forms.IGestureRecognizer},System.Func{``0,System.Boolean})" />
       </Member>
@@ -1186,7 +1188,7 @@
           <typeparam name="T">To be added.</typeparam>
           <param name="enumerable">To be added.</param>
           <param name="item">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.EnumerableExtensions" Member="M:Xamarin.Forms.Internals.EnumerableExtensions.IndexOf``1(System.Collections.Generic.IEnumerable{``0},``0)" />
       </Member>
@@ -1213,7 +1215,7 @@
           <typeparam name="T">To be added.</typeparam>
           <param name="enumerable">To be added.</param>
           <param name="predicate">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.EnumerableExtensions" Member="M:Xamarin.Forms.Internals.EnumerableExtensions.IndexOf``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Boolean})" />
       </Member>
@@ -1240,7 +1242,7 @@
           <typeparam name="T">To be added.</typeparam>
           <param name="enumerable">To be added.</param>
           <param name="item">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.EnumerableExtensions" Member="M:Xamarin.Forms.Internals.EnumerableExtensions.Prepend``1(System.Collections.Generic.IEnumerable{``0},``0)" />
       </Member>
@@ -1344,7 +1346,7 @@
           <param name="self">To be added.</param>
           <param name="min">To be added.</param>
           <param name="max">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.NumericExtensions" Member="M:Xamarin.Forms.Internals.NumericExtensions.Clamp(System.Double,System.Double,System.Double)" />
       </Member>
@@ -1369,7 +1371,7 @@
           <param name="self">To be added.</param>
           <param name="min">To be added.</param>
           <param name="max">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.NumericExtensions" Member="M:Xamarin.Forms.Internals.NumericExtensions.Clamp(System.Int32,System.Int32,System.Int32)" />
       </Member>
@@ -1392,7 +1394,7 @@
         <Docs>
           <param name="type">To be added.</param>
           <param name="predicate">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.GetField(System.Type,System.Func{System.Reflection.FieldInfo,System.Boolean})" />
       </Member>
@@ -1415,7 +1417,7 @@
         <Docs>
           <param name="type">To be added.</param>
           <param name="name">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.GetField(System.Type,System.String)" />
       </Member>
@@ -1436,7 +1438,7 @@
         </Parameters>
         <Docs>
           <param name="type">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.GetFields(System.Type)" />
       </Member>
@@ -1457,7 +1459,7 @@
         </Parameters>
         <Docs>
           <param name="type">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.GetProperties(System.Type)" />
       </Member>
@@ -1480,7 +1482,7 @@
         <Docs>
           <param name="type">To be added.</param>
           <param name="name">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.GetProperty(System.Type,System.String)" />
       </Member>
@@ -1503,7 +1505,7 @@
         <Docs>
           <param name="self">To be added.</param>
           <param name="c">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.IsAssignableFrom(System.Type,System.Type)" />
       </Member>
@@ -1526,7 +1528,7 @@
         <Docs>
           <param name="self">To be added.</param>
           <param name="o">To be added.</param>
-          <summary>To be added.</summary>
+          <summary>For internal use by the Xamarin.Forms platform.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.Internals.ReflectionExtensions" Member="M:Xamarin.Forms.Internals.ReflectionExtensions.IsInstanceOfType(System.Type,System.Object)" />
       </Member>
@@ -2254,6 +2256,50 @@
           <summary>Returns a value that tells whether elements in the picker are continuously updated while scrolling or updated once after scrolling has completed.</summary>
         </Docs>
         <Link Type="Xamarin.Forms.PlatformConfiguration.iOSSpecific.Picker" Member="M:Xamarin.Forms.PlatformConfiguration.iOSSpecific.Picker.UpdateMode(Xamarin.Forms.IPlatformElementConfiguration{Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.Picker})" />
+      </Member>
+    </ExtensionMethod>
+    <ExtensionMethod>
+      <Targets>
+        <Target Type="T:Xamarin.Forms.IPlatformElementConfiguration`2" />
+      </Targets>
+      <Member MemberName="SetShouldDelayContentTouches">
+        <MemberSignature Language="C#" Value="public static Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt; SetShouldDelayContentTouches (this Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt; config, bool value);" />
+        <MemberSignature Language="ILAsm" Value=".method public static hidebysig class Xamarin.Forms.IPlatformElementConfiguration`2&lt;class Xamarin.Forms.PlatformConfiguration.iOS, class Xamarin.Forms.ScrollView&gt; SetShouldDelayContentTouches(class Xamarin.Forms.IPlatformElementConfiguration`2&lt;class Xamarin.Forms.PlatformConfiguration.iOS, class Xamarin.Forms.ScrollView&gt; config, bool value) cil managed" />
+        <MemberType>ExtensionMethod</MemberType>
+        <ReturnValue>
+          <ReturnType>Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt;</ReturnType>
+        </ReturnValue>
+        <Parameters>
+          <Parameter Name="config" Type="Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt;" RefType="this" />
+          <Parameter Name="value" Type="System.Boolean" />
+        </Parameters>
+        <Docs>
+          <param name="config">To be added.</param>
+          <param name="value">To be added.</param>
+          <summary>To be added.</summary>
+        </Docs>
+        <Link Type="Xamarin.Forms.PlatformConfiguration.iOSSpecific.ScrollView" Member="M:Xamarin.Forms.PlatformConfiguration.iOSSpecific.ScrollView.SetShouldDelayContentTouches(Xamarin.Forms.IPlatformElementConfiguration{Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView},System.Boolean)" />
+      </Member>
+    </ExtensionMethod>
+    <ExtensionMethod>
+      <Targets>
+        <Target Type="T:Xamarin.Forms.IPlatformElementConfiguration`2" />
+      </Targets>
+      <Member MemberName="ShouldDelayContentTouches">
+        <MemberSignature Language="C#" Value="public static bool ShouldDelayContentTouches (this Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt; config);" />
+        <MemberSignature Language="ILAsm" Value=".method public static hidebysig bool ShouldDelayContentTouches(class Xamarin.Forms.IPlatformElementConfiguration`2&lt;class Xamarin.Forms.PlatformConfiguration.iOS, class Xamarin.Forms.ScrollView&gt; config) cil managed" />
+        <MemberType>ExtensionMethod</MemberType>
+        <ReturnValue>
+          <ReturnType>System.Boolean</ReturnType>
+        </ReturnValue>
+        <Parameters>
+          <Parameter Name="config" Type="Xamarin.Forms.IPlatformElementConfiguration&lt;Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView&gt;" RefType="this" />
+        </Parameters>
+        <Docs>
+          <param name="config">To be added.</param>
+          <summary>To be added.</summary>
+        </Docs>
+        <Link Type="Xamarin.Forms.PlatformConfiguration.iOSSpecific.ScrollView" Member="M:Xamarin.Forms.PlatformConfiguration.iOSSpecific.ScrollView.ShouldDelayContentTouches(Xamarin.Forms.IPlatformElementConfiguration{Xamarin.Forms.PlatformConfiguration.iOS,Xamarin.Forms.ScrollView})" />
       </Member>
     </ExtensionMethod>
     <ExtensionMethod>
