@@ -2,7 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Android.App;
+using Xamarin.Forms.Controls;
+using Xamarin.Forms.Platform.Android;
 using Xamarin.Forms;
+using Xamarin.Forms.ControlGallery.Android;
+using Xamarin.Forms.Controls.Issues;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -34,12 +38,10 @@ using Xamarin.Forms;
 [assembly: UsesPermission (Android.Manifest.Permission.Internet)]
 [assembly: UsesPermission (Android.Manifest.Permission.WriteExternalStorage)]
 
-[assembly: Android.App.MetaData("com.google.android.maps.v2.API_KEY", Value = "AIzaSyAdstcJQswxEjzX5YjLaMcu2aRVEBJw39Y")]
-[assembly: Xamarin.Forms.ResolutionGroupName ("XamControl")]
 
-#if TEST_LEGACY_RENDERERS
-[assembly: ExportRenderer(typeof(Button), typeof(Xamarin.Forms.Platform.Android.AppCompat.ButtonRenderer))]
-[assembly: ExportRenderer(typeof(Image), typeof(Xamarin.Forms.Platform.Android.ImageRenderer))]
-[assembly: ExportRenderer(typeof(Label), typeof(Xamarin.Forms.Platform.Android.LabelRenderer))]
-[assembly: ExportRenderer(typeof(Frame), typeof(Xamarin.Forms.Platform.Android.AppCompat.FrameRenderer))]
-#endif
+
+[assembly: Android.App.MetaData("com.google.android.maps.v2.API_KEY", Value = "AIzaSyAdstcJQswxEjzX5YjLaMcu2aRVEBJw39Y")]
+[assembly: Xamarin.Forms.ResolutionGroupName (Xamarin.Forms.Controls.Issues.Effects.ResolutionGroupName)]
+
+// Deliberately broken image source and handler so we can test handling of image loading errors
+[assembly: ExportImageSourceHandler(typeof(FailImageSource), typeof(BrokenImageSourceHandler))]
