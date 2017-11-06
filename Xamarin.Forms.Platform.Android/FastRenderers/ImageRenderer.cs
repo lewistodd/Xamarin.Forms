@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using Android.Content;
 using AImageView = Android.Widget.ImageView;
 using AView = Android.Views.View;
 using Android.Views;
@@ -16,6 +17,7 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 		int? _defaultLabelFor;
 		VisualElementTracker _visualElementTracker;
 		VisualElementRenderer _visualElementRenderer;
+		readonly MotionEventHelper _motionEventHelper = new MotionEventHelper();
 
 		protected override void Dispose(bool disposing)
 		{
@@ -67,16 +69,20 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			UpdateAspect();
 			this.EnsureId();
 
+			ElevationHelper.SetElevation(this, e.NewElement);
+
 			ElementChanged?.Invoke(this, new VisualElementChangedEventArgs(e.OldElement, e.NewElement));
 		}
 
 		public override bool OnTouchEvent(MotionEvent e)
-        {
-            bool handled;
-            var result = _visualElementRenderer.OnTouchEvent(e, Parent, out handled);
+		{
+			if (_visualElementRenderer.OnTouchEvent(e) || base.OnTouchEvent(e))
+			{
+				return true;
+			}
 
-            return handled ? result : base.OnTouchEvent(e);
-        }
+			return _motionEventHelper.HandleMotionEvent(Parent, e);
+		}
 
 		Size MinimumSize()
 		{
@@ -122,7 +128,7 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 			}
 
 			Internals.Performance.Stop();
-
+			_motionEventHelper.UpdateElement(element);
 			OnElementChanged(new ElementChangedEventArgs<Image>(oldElement, _element));
 
 			_element?.SendViewInitialized(Control);
@@ -153,6 +159,11 @@ namespace Xamarin.Forms.Platform.Android.FastRenderers
 		public event EventHandler<VisualElementChangedEventArgs> ElementChanged;
 		public event EventHandler<PropertyChangedEventArgs> ElementPropertyChanged;
 
+		public ImageRenderer(Context context) : base(context)
+		{
+		}
+
+		[Obsolete("This constructor is obsolete as of version 2.5. Please use ImageRenderer(Context) instead.")]
 		public ImageRenderer() : base(Forms.Context)
 		{
 		}

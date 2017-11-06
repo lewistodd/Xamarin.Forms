@@ -47,6 +47,14 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 		// The following is based on https://android.googlesource.com/platform/frameworks/support/+/refs/heads/master/v4/java/android/support/v4/app/FragmentManager.java#849
 		const int TransitionDuration = 220;
 
+		public NavigationPageRenderer(Context context) : base(context)
+		{
+			AutoPackage = false;
+			Id = Platform.GenerateViewId();
+			Device.Info.PropertyChanged += DeviceInfoPropertyChanged;
+		}
+
+		[Obsolete("This constructor is obsolete as of version 2.5. Please use NavigationPageRenderer(Context) instead.")]
 		public NavigationPageRenderer()
 		{
 			AutoPackage = false;
@@ -120,14 +128,13 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 			{
 				_disposed = true;
 
-				var activity = (FormsAppCompatActivity)Context;
-
 				// API only exists on newer android YAY
 				if ((int)Build.VERSION.SdkInt >= 17)
 				{
-					if (!activity.IsDestroyed)
+					FragmentManager fm = FragmentManager;
+
+					if (!fm.IsDestroyed)
 					{
-						FragmentManager fm = FragmentManager;
 						FragmentTransaction trans = fm.BeginTransaction();
 						foreach (Fragment fragment in _fragmentStack)
 							trans.Remove(fragment);
@@ -569,6 +576,11 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 				return;
 			}
 
+#if DEBUG
+			// Enables logging of moveToState operations to logcat
+			FragmentManager.EnableDebugLogging(true);
+#endif
+
 			// Go ahead and take care of the fragment bookkeeping for the page being removed
 			FragmentTransaction transaction = FragmentManager.BeginTransaction();
 			transaction.DisallowAddToBackStack();
@@ -577,18 +589,6 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 			// And remove the fragment from our own stack
 			_fragmentStack.Remove(fragment);
-
-			// Now handle all the XF removal/cleanup
-			IVisualElementRenderer rendererToRemove = Android.Platform.GetRenderer(page);
-
-			if (rendererToRemove != null)
-			{
-				var containerToRemove = (PageContainer)rendererToRemove.View.Parent;
-				rendererToRemove.View?.RemoveFromParent();
-				rendererToRemove?.Dispose();
-				containerToRemove?.RemoveFromParent();
-				containerToRemove?.Dispose();
-			}
 
 			Device.StartTimer(TimeSpan.FromMilliseconds(10), () =>
 			{
@@ -649,8 +649,6 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 
 			if (animated)
 				SetupPageTransition(transaction, !removed);
-
-			transaction.DisallowAddToBackStack();
 
 			if (_fragmentStack.Count == 0)
 			{
@@ -787,7 +785,7 @@ namespace Xamarin.Forms.Platform.Android.AppCompat
 					FileImageSource icon = item.Icon;
 					if (!string.IsNullOrEmpty(icon))
 					{
-						Drawable iconDrawable = context.Resources.GetFormsDrawable(icon);
+						Drawable iconDrawable = context.GetFormsDrawable(icon);
 						if (iconDrawable != null)
 							menuItem.SetIcon(iconDrawable);
 					}

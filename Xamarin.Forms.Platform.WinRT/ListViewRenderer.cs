@@ -14,6 +14,8 @@ using WListView = Windows.UI.Xaml.Controls.ListView;
 using WBinding = Windows.UI.Xaml.Data.Binding;
 using WApp = Windows.UI.Xaml.Application;
 using Xamarin.Forms.Internals;
+using Xamarin.Forms.PlatformConfiguration.WindowsSpecific;
+using Specifics = Xamarin.Forms.PlatformConfiguration.WindowsSpecific.ListView;
 
 #if WINDOWS_UWP
 
@@ -26,6 +28,9 @@ namespace Xamarin.Forms.Platform.WinRT
 	public class ListViewRenderer : ViewRenderer<ListView, FrameworkElement>
 	{
 		ITemplatedItemsView<Cell> TemplatedItemsView => Element;
+		bool _itemWasClicked;
+		bool _subscribedToItemClick;
+		bool _subscribedToTapped;
 
 
 #if !WINDOWS_UWP
@@ -62,7 +67,8 @@ namespace Xamarin.Forms.Platform.WinRT
 
 				if (List == null)
 				{
-					List = new WListView {
+					List = new WListView
+					{
 						IsSynchronizedWithCurrentItem = false,
 						ItemTemplate = (Windows.UI.Xaml.DataTemplate)WApp.Current.Resources["CellTemplate"],
 						HeaderTemplate = (Windows.UI.Xaml.DataTemplate)WApp.Current.Resources["View"],
@@ -70,11 +76,6 @@ namespace Xamarin.Forms.Platform.WinRT
 						ItemContainerStyle = (Windows.UI.Xaml.Style)WApp.Current.Resources["FormsListViewItem"],
 						GroupStyleSelector = (GroupStyleSelector)WApp.Current.Resources["ListViewGroupSelector"]
 					};
-
-					// In order to support tapping on elements within a list item, we handle
-					// ListView.Tapped (which can be handled by child elements in the list items
-					// and prevented from bubbling up) rather than ListView.ItemClick
-					List.Tapped += ListOnTapped;
 
 					List.SelectionChanged += OnControlSelectionChanged;
 
@@ -93,6 +94,7 @@ namespace Xamarin.Forms.Platform.WinRT
 				UpdateGrouping();
 				UpdateHeader();
 				UpdateFooter();
+				UpdateSelectionMode();
 				ClearSizeEstimate();
 			}
 		}
@@ -130,14 +132,26 @@ namespace Xamarin.Forms.Platform.WinRT
 				ClearSizeEstimate();
 				((CollectionViewSource)List.DataContext).Source = Element.ItemsSource;
 			}
+			else if (e.PropertyName == Specifics.SelectionModeProperty.PropertyName)
+			{
+				UpdateSelectionMode();
+			}
 		}
 
 		protected override void Dispose(bool disposing)
 		{
 			if (List != null)
 			{
-				List.Tapped -= ListOnTapped;
-
+				if (_subscribedToTapped)
+				{
+					_subscribedToTapped = false;
+					List.Tapped -= ListOnTapped;
+				}
+				if (_subscribedToItemClick)
+				{
+					_subscribedToItemClick = false;
+					List.ItemClick -= OnListItemClicked;
+				}
 				List.SelectionChanged -= OnControlSelectionChanged;
 
 				List.DataContext = null;
@@ -245,6 +259,44 @@ namespace Xamarin.Forms.Platform.WinRT
 					_zoom.CanChangeViews = false;
 				else if (List != Control)
 					SetNativeControl(List);
+			}
+		}
+
+		void UpdateSelectionMode()
+		{
+			if (Element.OnThisPlatform().GetSelectionMode() == PlatformConfiguration.WindowsSpecific.ListViewSelectionMode.Accessible)
+			{
+				// Using Tapped will disable the ability to use the Enter key
+				List.IsItemClickEnabled = true;
+				if (!_subscribedToItemClick)
+				{
+					_subscribedToItemClick = true;
+					List.ItemClick += OnListItemClicked;
+				}
+
+				if (_subscribedToTapped)
+				{
+					_subscribedToTapped = false;
+					List.Tapped -= ListOnTapped;
+				}
+			}
+			else
+			{
+				// In order to support tapping on elements within a list item, we handle 
+				// ListView.Tapped (which can be handled by child elements in the list items 
+				// and prevented from bubbling up) rather than ListView.ItemClick 
+				if (!_subscribedToTapped)
+				{
+					_subscribedToTapped = true;
+					List.Tapped += ListOnTapped;
+				}
+
+				List.IsItemClickEnabled = false;
+				if (_subscribedToItemClick)
+				{
+					_subscribedToItemClick = false;
+					List.ItemClick -= OnListItemClicked;
+				}
 			}
 		}
 
@@ -401,6 +453,32 @@ namespace Xamarin.Forms.Platform.WinRT
 			return _scrollViewer;
 		}
 
+		void ListOnTapped(object sender, TappedRoutedEventArgs args)
+		{
+			var orig = args.OriginalSource as DependencyObject;
+			int index = -1;
+
+			// Work our way up the tree until we find the actual list item
+			// the user tapped on
+
+			while (orig != null && orig != List)
+			{
+				var lv = orig as ListViewItem;
+				if (lv != null)
+				{
+					index = TemplatedItemsView.TemplatedItems.GetGlobalIndexOfItem(lv.Content);
+					break;
+				}
+
+				orig = VisualTreeHelper.GetParent(orig);
+			}
+
+			if (index > -1)
+			{
+				OnListItemClicked(index);
+			}
+		}
+
 		void OnElementItemSelected(object sender, SelectedItemChangedEventArgs e)
 		{
 			if (Element == null)
@@ -436,39 +514,13 @@ namespace Xamarin.Forms.Platform.WinRT
 			List.SelectedIndex = index;
 		}
 
-		void ListOnTapped(object sender, TappedRoutedEventArgs args)
-		{
-			var orig = args.OriginalSource as DependencyObject;
-			int index = -1;
-
-			// Work our way up the tree until we find the actual list item 
-			// the user tapped on
-			while (orig != null && orig != List)
-			{
-				var lv = orig as ListViewItem;
-
-				if (lv != null)
-				{
-					index = TemplatedItemsView.TemplatedItems.GetGlobalIndexOfItem(lv.Content);
-					break;
-				}
-
-				orig = VisualTreeHelper.GetParent(orig);
-			}
-
-			if (index > -1)
-			{
-				OnListItemClicked(index);
-			}
-		}
-
 		void OnListItemClicked(int index)
 		{
 #if !WINDOWS_UWP
-	// If we're on the phone , we need to cache the selected item in case the handler 
-	// we're about to call changes any item indexes;
-	// in some cases, those index changes will throw an exception we can't catch if 
-	// the listview has an item selected
+			// If we're on the phone , we need to cache the selected item in case the handler 
+			// we're about to call changes any item indexes;
+			// in some cases, those index changes will throw an exception we can't catch if 
+			// the listview has an item selected
 			object selectedItem = null;
 			if (Device.Idiom == TargetIdiom.Phone)
 			{
@@ -479,6 +531,7 @@ namespace Xamarin.Forms.Platform.WinRT
 #endif
 
 			Element.NotifyRowTapped(index, cell: null);
+			_itemWasClicked = true;
 
 #if !WINDOWS_UWP
 
@@ -503,18 +556,32 @@ namespace Xamarin.Forms.Platform.WinRT
 #endif
 		}
 
+		void OnListItemClicked(object sender, ItemClickEventArgs e)
+		{
+			if (e.ClickedItem != null)
+				OnListItemClicked(((WListView)e.OriginalSource).Items.IndexOf(e.ClickedItem));
+		}
+
 		void OnControlSelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
+#if !WINDOWS_UWP
 			RestorePreviousSelectedVisual();
 
 			if (e.AddedItems.Count == 0)
+			{
+				// Deselecting an item is a valid SelectedItem change.
+				if (Element.SelectedItem != List.SelectedItem)
+				{
+					OnListItemClicked(List.SelectedIndex);
+				}
+
 				return;
+			}
 
 			object cell = e.AddedItems[0];
 			if (cell == null)
 				return;
 
-#if !WINDOWS_UWP
 			if (Device.Idiom == TargetIdiom.Phone)
 			{
 				FrameworkElement element = FindElement(cell);
@@ -524,10 +591,10 @@ namespace Xamarin.Forms.Platform.WinRT
 				}
 			}
 #endif
+			if (Element.SelectedItem != List.SelectedItem && !_itemWasClicked)
+				((IElementController)Element).SetValueFromRenderer(ListView.SelectedItemProperty, List.SelectedItem);
 
-			// A11y: Tapped event will not be routed when Narrator is active
-			// Also handles keyboard selection
-			SelectElementItem();
+			_itemWasClicked = false;
 		}
 
 		FrameworkElement FindElement(object cell)
@@ -541,24 +608,8 @@ namespace Xamarin.Forms.Platform.WinRT
 			return null;
 		}
 
-		void SelectElementItem()
-		{
-			if (List.SelectedItem != null && Element.SelectedItem != List.SelectedItem)
-			{
-				((IElementController)Element).SetValueFromRenderer(ListView.SelectedItemProperty, List?.SelectedItem);
-				OnElementItemSelected(null, new SelectedItemChangedEventArgs(Element?.SelectedItem));
-			}
-		}
+#if !WINDOWS_UWP
 
-#if WINDOWS_UWP
-		void RestorePreviousSelectedVisual()
-		{
-		}
-
-		void SetSelectedVisual(FrameworkElement element)
-		{
-		}
-#else
 		void RestorePreviousSelectedVisual()
 		{
 			foreach (BrushedElement highlight in _highlightedElements)
